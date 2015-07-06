@@ -1,0 +1,13 @@
+{
+  "name": "houmio-driver-osram-lightify",
+  "version": "1.0.0",
+  "description": "Houm.io driver for Osram Lightify",
+  "license": "MIT",
+  "main": "src/driver.js",
+  "homepage": "https://github.com/timoly/houmio-driver-osram-lightify",
+  "dependencies": {
+    "baconjs": "^0.7.66",
+    "carrier": "^0.1.14",
+    "winston": "^1.0.1"
+  }
+}
