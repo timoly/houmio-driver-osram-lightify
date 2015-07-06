@@ -21,6 +21,7 @@ console.log("houmioBridge:", houmioBridge, "lightifyBridge:", lightifyBridge)
 var lightifySocket = new net.Socket();
 lightifySocket.connect(4000, lightifyBridge, function(){
   console.log('lightify connected');
+  queryBulbs()
 });
 
 var d2h = function(d){
@@ -120,7 +121,44 @@ var rgbColors = function(addr, red, green, blue){
   var color = [d2h(red), d2h(green), d2h(blue)]
   var cmd = ['00', '36', '00', '00', '00', '00'].concat(splitAddress(addr)).concat(color).concat(['ff', '00', '00'])
   sendCommand(cmd);
-};
+}
+
+var queryBulbs = function(){
+  var h2d = function(h){
+    return parseInt(h,16);
+  }
+
+  var name = function(hexArray){
+    var result = hexArray.map(function(hex){
+      return String.fromCharCode(h2d(hex))
+    })
+
+    return result.join('').replace(/\u0000/g, '').normalize().trim()
+  }
+
+  var chrsToAddress = function(chrs){
+    return chrs.reverse().join(":");
+  }
+
+  var bulbLength = 42
+  var cmd = ['00', '13', '00', '00', '00', '00', '01', '00', '00', '00', '00']
+  sendCommand(cmd)
+
+  lightifySocket.once('data', function(data){
+    var buffer = data.toString('hex').match(/.{1,2}/g)
+
+    if(buffer.length > 11){
+      buffer = buffer.slice(11);
+      var bulbCount = Math.floor(buffer.length / bulbLength)
+
+      for(var i=0; i<bulbCount; i++){
+        var chunk = buffer.slice(bulbLength * i, bulbLength * i + bulbLength)
+        var mac = chrsToAddress(chunk.slice(2, 10))
+        console.log("bulb:", name(chunk.slice(26, 41)), "mac:", mac)
+      }
+    }
+  })
+}
 
 var exit = function(msg) {
   console.log(msg);
@@ -189,7 +227,7 @@ var writeMessagesToLightify = function(bridgeSocket){
       hueWithLightness(msg.data.protocolAddress, scaleByteTo359(msg.data.hue), 100 - scaleByteToPercent(msg.data.saturation))
     }
   });
-};
+}
 
 var connectBridge = function() {
     var bridgeSocket = new net.Socket();
