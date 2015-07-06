@@ -20,7 +20,7 @@ console.log("houmioBridge:", houmioBridge, "lightifyBridge:", lightifyBridge)
 
 var lightifySocket = new net.Socket();
 lightifySocket.connect(4000, lightifyBridge, function(){
-  console.log('ligtify connected');
+  console.log('lightify connected');
 });
 
 var d2h = function(d){
@@ -35,10 +35,7 @@ var d2h = function(d){
 }
 
 var splitAddress = function(addr){
-  var addr = addr.split(":")
-  addr.reverse()
-
-  return addr
+  return addr.split(":").reverse()
 }
 
 // HSL->RGB code found & modified from:
@@ -139,42 +136,48 @@ var displayError = function(err) {
 };
 
 var toLines = function(socket) {
-  return Bacon.fromBinder(function(sink) {
+  return Bacon.fromBinder(function(sink){
     carrier.carry(socket, sink);
+
     socket.on("close", function() {
       return sink(new Bacon.End());
     });
+
     socket.on("error", function(err) {
       return sink(new Bacon.Error(err));
     });
-    return function() {};
+
+    return function(){};
   });
 };
 
-var isWriteMessage = function(message) {
+var isWriteMessage = function(message){
   return message.command === "write";
 };
 
-var scaleByteToPercent = function(oldValue) {
-  var newMax, newMin, oldMax, oldMin;
-  oldMin = 0;
-  oldMax = 255;
-  newMin = 0;
-  newMax = 100;
+var scaleByteToPercent = function(oldValue){
+  var oldMin = 0;
+  var oldMax = 255;
+  var newMin = 0;
+  var newMax = 100;
+
   return Math.floor((((oldValue - oldMin) * (newMax - newMin)) / (oldMax - oldMin)) + newMin);
 };
 
-var scaleByteTo359 = function(oldValue) {
-  var newMax, newMin, oldMax, oldMin;
-  oldMin = 0;
-  oldMax = 255;
-  newMin = 0;
-  newMax = 359;
+var scaleByteTo359 = function(oldValue){
+  var oldMin = 0;
+  var oldMax = 255;
+  var newMin = 0;
+  var newMax = 359;
+
   return Math.floor((((oldValue - oldMin) * (newMax - newMin)) / (oldMax - oldMin)) + newMin);
 };
 
-var writeMessagesToLightify = function(bridgeSocket) {
-  return toLines(bridgeSocket).map(JSON.parse).filter(isWriteMessage).onValue(function(msg) {
+var writeMessagesToLightify = function(bridgeSocket){
+  return toLines(bridgeSocket)
+  .map(JSON.parse)
+  .filter(isWriteMessage)
+  .onValue(function(msg){
     if(msg.data.on) {
       brightness(msg.data.protocolAddress, scaleByteToPercent(msg.data.bri));
     }
@@ -183,7 +186,7 @@ var writeMessagesToLightify = function(bridgeSocket) {
     }
 
     if(msg.data.hue && msg.data.saturation){
-      hueWithLightness(msg.data.protocolAddress, scaleByteTo359(msg.data.hue), 0)
+      hueWithLightness(msg.data.protocolAddress, scaleByteTo359(msg.data.hue), 100 - scaleByteToPercent(msg.data.saturation))
     }
   });
 };
@@ -191,8 +194,6 @@ var writeMessagesToLightify = function(bridgeSocket) {
 var connectBridge = function() {
     var bridgeSocket = new net.Socket();
     bridgeSocket.connect(houmioBridge.split(":")[1], houmioBridge.split(":")[0], function(){
-      console.log("connected", houmioBridge)
-
       writeMessagesToLightify(bridgeSocket);
       return bridgeSocket.write((JSON.stringify({
         command: "driverReady",
