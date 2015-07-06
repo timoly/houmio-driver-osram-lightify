@@ -137,7 +137,7 @@ var queryBulbs = function(){
       return String.fromCharCode(h2d(hex))
     })
 
-    return result.join('').replace(/\u0000/g, '').normalize().trim()
+    return result.join('').replace(/\u0000/g, '').trim()
   }
 
   var chrsToAddress = function(chrs){
