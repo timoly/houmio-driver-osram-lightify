@@ -144,7 +144,7 @@ var queryBulbs = function(){
     return chrs.reverse().join(":")
   }
 
-  var bulbLength = 42
+  var bulbLength = 50
   var cmd = ['00', '13', '00', '00', '00', '00', '01', '00', '00', '00', '00']
   lightifyCommandBus.push(cmd)
 
@@ -216,9 +216,11 @@ var writeMessagesToLightify = function(bridgeSocket){
       state(msg.data.protocolAddress, false)
     }
 
-    if(msg.data.hue && msg.data.saturation){
-      hueWithLightness(msg.data.protocolAddress, scaleByteTo359(msg.data.hue), 100 - scaleByteToPercent(msg.data.saturation))
+    if(msg.data.hue && msg.data.saturation === 0){
+      colorTemperature(msg.data.protocolAddress, 2200 + 4300 * scaleByteToPercent(msg.data.hue) / 100)
     }
+    //TODO color
+    //hueWithLightness(msg.data.protocolAddress, scaleByteTo359(msg.data.hue), 100 - scaleByteToPercent(msg.data.saturation))
   })
 }
 
