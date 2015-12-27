@@ -92,7 +92,7 @@ var hueWithLightness = function(addr, hue, lightness){
 }
 
 lightifyCommandBus
-.bufferingThrottle(200)
+.bufferingThrottle(250)
 .onValue(function(cmd){
   var action = [d2h(cmd.length), '00'].concat(cmd)
   lightifySocket.write(action.join(''), 'hex')
